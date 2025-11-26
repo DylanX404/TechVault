@@ -5,14 +5,13 @@ import { Button } from '../components/ui/Button';
 import { ListHeader } from '../components/ListHeader';
 import { organizationAPI } from '../services/core';
 import { Organization } from '../types/core';
-import { Building2, MapPin, Users, FileText, Lock, Settings, ChevronRight, Trash2, Edit } from 'lucide-react';
+import { Building2, MapPin, ChevronRight, Trash2, Edit } from 'lucide-react';
 
 export const Organizations: React.FC = () => {
   const navigate = useNavigate();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchOrganizations();
@@ -33,7 +32,6 @@ export const Organizations: React.FC = () => {
   };
 
   const handleSearch = async (query: string) => {
-    setSearchQuery(query);
     if (query.trim()) {
       try {
         const response = await organizationAPI.search(query);

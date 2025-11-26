@@ -1,37 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ListHeader } from '../components/ListHeader';
+import { EmptyOrgState } from '../components/EmptyOrgState';
+import { useOrganization } from '../contexts/OrganizationContext';
 import { locationAPI } from '../services/core';
 import { Location } from '../types/core';
 import { MapPin, Trash2, Edit, ChevronRight } from 'lucide-react';
 
 export const Locations: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { selectedOrg } = useOrganization();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const orgId = searchParams.get('org');
 
   useEffect(() => {
-    fetchLocations();
-  }, [orgId]);
+    if (selectedOrg) {
+      fetchLocations();
+    } else {
+      setLocations([]);
+      setLoading(false);
+    }
+  }, [selectedOrg]);
 
   const fetchLocations = async () => {
+    if (!selectedOrg) return;
+
     try {
       setLoading(true);
-      let response;
-      if (orgId) {
-        response = await locationAPI.byOrganization(orgId);
-        setLocations(Array.isArray(response.data) ? response.data : response.data.results);
-      } else {
-        response = await locationAPI.getAll();
-        setLocations(response.data.results);
-      }
+      const response = await locationAPI.byOrganization(selectedOrg.id.toString());
+      const data: Location[] = Array.isArray(response.data)
+        ? response.data
+        : ((response.data as any)?.results || []);
+      setLocations(data);
       setError(null);
     } catch (err) {
       setError('Failed to load locations');
@@ -41,18 +44,9 @@ export const Locations: React.FC = () => {
     }
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    // Filter locally for now
-    if (query) {
-      const filtered = locations.filter(loc =>
-        loc.name.toLowerCase().includes(query.toLowerCase()) ||
-        loc.city.toLowerCase().includes(query.toLowerCase())
-      );
-      setLocations(filtered);
-    } else {
-      fetchLocations();
-    }
+  const handleSearch = (_query: string) => {
+    // TODO: Implement search functionality
+    fetchLocations();
   };
 
   const handleDelete = async (id: string) => {
@@ -75,11 +69,15 @@ export const Locations: React.FC = () => {
         searchPlaceholder="Search locations..."
       />
 
-      {error && (
-        <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-200">{error}</div>
-      )}
+      {!selectedOrg ? (
+        <EmptyOrgState />
+      ) : (
+        <>
+          {error && (
+            <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-200">{error}</div>
+          )}
 
-      {loading ? (
+          {loading ? (
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           <p className="mt-4 text-gray-400">Loading locations...</p>
@@ -139,6 +137,8 @@ export const Locations: React.FC = () => {
             </Card>
           ))}
         </div>
+          )}
+        </>
       )}
     </div>
   );

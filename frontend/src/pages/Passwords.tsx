@@ -1,36 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ListHeader } from '../components/ListHeader';
+import { EmptyOrgState } from '../components/EmptyOrgState';
+import { useOrganization } from '../contexts/OrganizationContext';
 import { passwordAPI } from '../services/core';
 import { PasswordEntry } from '../types/core';
 import { Lock, Trash2, Edit, ChevronRight } from 'lucide-react';
 
 export const Passwords: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { selectedOrg } = useOrganization();
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const orgId = searchParams.get('org');
-
   useEffect(() => {
-    fetchPasswords();
-  }, [orgId]);
+    if (selectedOrg) {
+      fetchPasswords();
+    } else {
+      setPasswords([]);
+      setLoading(false);
+    }
+  }, [selectedOrg]);
 
   const fetchPasswords = async () => {
+    if (!selectedOrg) return;
+
     try {
       setLoading(true);
-      let response;
-      if (orgId) {
-        response = await passwordAPI.byOrganization(orgId);
-        setPasswords(Array.isArray(response.data) ? response.data : response.data.results);
-      } else {
-        response = await passwordAPI.getAll();
-        setPasswords(response.data.results);
-      }
+      const response = await passwordAPI.byOrganization(selectedOrg.id.toString());
+      const data: PasswordEntry[] = Array.isArray(response.data)
+        ? response.data
+        : ((response.data as any)?.results || []);
+      setPasswords(data);
+      setError(null);
     } catch (err) {
       setError('Failed to load passwords');
     } finally {
@@ -52,8 +57,13 @@ export const Passwords: React.FC = () => {
   return (
     <div className="space-y-6">
       <ListHeader title="Password Vault" onAddClick={() => navigate('/passwords/new')} onSearch={() => {}} searchPlaceholder="Search passwords..." />
-      {error && <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-200">{error}</div>}
-      {loading ? (
+
+      {!selectedOrg ? (
+        <EmptyOrgState />
+      ) : (
+        <>
+          {error && <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-200">{error}</div>}
+          {loading ? (
         <div className="text-center py-12"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>
       ) : passwords.length === 0 ? (
         <Card className="p-8 text-center">
@@ -82,6 +92,8 @@ export const Passwords: React.FC = () => {
             </Card>
           ))}
         </div>
+          )}
+        </>
       )}
     </div>
   );

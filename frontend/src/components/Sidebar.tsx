@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganization } from '@/contexts/OrganizationContext';
 import { cn } from '@/lib/utils';
 import {
   Shield,
@@ -24,8 +25,19 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const { logout } = useAuth();
+  const { selectedOrg, setSelectedOrg, organizations, loading } = useOrganization();
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState('dashboard');
+
+  const handleOrgChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const orgId = e.target.value;
+    if (orgId) {
+      const org = organizations.find((o) => o.id.toString() === orgId);
+      setSelectedOrg(org || null);
+    } else {
+      setSelectedOrg(null);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -76,6 +88,31 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           )}
         </button>
       </div>
+
+      {/* Organization Selector */}
+      {!collapsed && (
+        <div className="px-4 py-3 border-b border-border">
+          <label className="text-xs font-medium text-muted-foreground mb-2 block">
+            Organization
+          </label>
+          {loading ? (
+            <div className="text-sm text-muted-foreground">Loading...</div>
+          ) : (
+            <select
+              value={selectedOrg?.id.toString() || ''}
+              onChange={handleOrgChange}
+              className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">Select Organization</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id.toString()}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 p-2 overflow-y-auto">

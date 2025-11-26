@@ -1,36 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ListHeader } from '../components/ListHeader';
+import { EmptyOrgState } from '../components/EmptyOrgState';
+import { useOrganization } from '../contexts/OrganizationContext';
 import { contactAPI } from '../services/core';
 import { Contact } from '../types/core';
 import { Users, Trash2, Edit, ChevronRight } from 'lucide-react';
 
 export const Contacts: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { selectedOrg } = useOrganization();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const orgId = searchParams.get('org');
-
   useEffect(() => {
-    fetchContacts();
-  }, [orgId]);
+    if (selectedOrg) {
+      fetchContacts();
+    } else {
+      setContacts([]);
+      setLoading(false);
+    }
+  }, [selectedOrg]);
 
   const fetchContacts = async () => {
+    if (!selectedOrg) return;
+
     try {
       setLoading(true);
-      let response;
-      if (orgId) {
-        response = await contactAPI.byOrganization(orgId);
-        setContacts(Array.isArray(response.data) ? response.data : response.data.results);
-      } else {
-        response = await contactAPI.getAll();
-        setContacts(response.data.results);
-      }
+      const response = await contactAPI.byOrganization(selectedOrg.id.toString());
+      const data: Contact[] = Array.isArray(response.data)
+        ? response.data
+        : ((response.data as any)?.results || []);
+      setContacts(data);
+      setError(null);
     } catch (err) {
       setError('Failed to load contacts');
     } finally {
@@ -58,9 +63,13 @@ export const Contacts: React.FC = () => {
         searchPlaceholder="Search contacts..."
       />
 
-      {error && <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-200">{error}</div>}
+      {!selectedOrg ? (
+        <EmptyOrgState />
+      ) : (
+        <>
+          {error && <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-200">{error}</div>}
 
-      {loading ? (
+          {loading ? (
         <div className="text-center py-12"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>
       ) : contacts.length === 0 ? (
         <Card className="p-8 text-center">
@@ -91,6 +100,8 @@ export const Contacts: React.FC = () => {
             </Card>
           ))}
         </div>
+          )}
+        </>
       )}
     </div>
   );
