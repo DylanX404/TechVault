@@ -51,28 +51,37 @@ TechVault/
 
 ## ✨ Features
 
-### Current (Foundation)
-
+### Phase 1: Foundation ✅
 - ✅ User authentication (email/password + GitHub OAuth)
 - ✅ JWT token management with auto-refresh
 - ✅ Protected routes and authorization
 - ✅ Premium dark/blue design language
 - ✅ Responsive sidebar navigation
 - ✅ Dashboard with user welcome
-- ✅ PostgreSQL database
+- ✅ SQLite (dev) & PostgreSQL (prod) support
 - ✅ Full TypeScript support
-- ✅ CORS configuration for local development
+- ✅ CORS configuration
 
-### Menu Structure (Placeholders)
+### Phase 2: Core Features ✅ COMPLETE
+- ✅ **Organizations**: Full CRUD with statistics
+- ✅ **Locations**: Manage physical locations per organization
+- ✅ **Contacts**: Contact management with organization/location linking
+- ✅ **Documentation**: Create, edit, publish documentation with versioning
+- ✅ **Password Vault**: Secure password entry storage
+- ✅ **Configurations**: System configuration management
+- ✅ Search & filtering across all entities
+- ✅ Advanced API filtering (DjangoFilterBackend)
+- ✅ Custom user manager for email-based auth
+- ✅ Admin panel for all models
 
-- Dashboard
-- Organizations
-- Locations
-- Contacts
-- Documentation
-- Passwords
-- Configurations
-- Settings
+### Planned Features
+- ⏳ File attachments for documents
+- ⏳ Team/group access control & permissions
+- ⏳ Password encryption
+- ⏳ Audit logging & activity trails
+- ⏳ Two-factor authentication
+- ⏳ Advanced search with full-text support
+- ⏳ API rate limiting
 
 ## 🔧 Quick Start
 
@@ -80,8 +89,9 @@ TechVault/
 
 - Python 3.10+
 - Node.js 18+
-- PostgreSQL 14+
 - Git
+- SQLite (included with Python) - for development
+- PostgreSQL 12+ (optional) - for production
 
 ### 1. Clone the Repository
 
@@ -96,30 +106,25 @@ cd TechVault
 cd backend
 
 # Create virtual environment
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your settings
-
-# Create PostgreSQL database
-createdb techvault
-
-# Run migrations
+# Run migrations (creates SQLite database automatically)
+python manage.py makemigrations
 python manage.py migrate
 
 # Create superuser
-python manage.py createsuperuser
+python manage.py createsuperuser --email admin@example.com --first_name Admin --last_name User
 
 # Start backend server
 python manage.py runserver
 ```
 
 Backend will be available at `http://localhost:8000`
+Admin panel at `http://localhost:8000/admin`
 
 ### 3. Frontend Setup
 
@@ -131,17 +136,21 @@ cd frontend
 # Install dependencies
 npm install
 
-# Set up environment variables
-cp .env.example .env
-
 # Start development server
 npm run dev
 ```
 
 Frontend will be available at `http://localhost:5173`
 
+### 4. Login & Explore
+
+1. Open `http://localhost:5173` in your browser
+2. Login with your superuser credentials
+3. Start creating organizations, locations, and more!
+
 ## 📚 Documentation
 
+- [Setup Guide](./SETUP_GUIDE.md) - Comprehensive setup and API documentation
 - [Backend Documentation](./backend/README.md)
 - [Frontend Documentation](./frontend/README.md)
 
@@ -302,30 +311,48 @@ For issues and questions:
 
 ## 🎯 Roadmap
 
-### Phase 1: Foundation ✅
-- User authentication
-- Basic dashboard
-- Navigation structure
+### Phase 1: Foundation ✅ COMPLETE
+- ✅ User authentication (email/password + OAuth)
+- ✅ JWT token management
+- ✅ Protected routes
+- ✅ Dashboard
+- ✅ Sidebar navigation
 
-### Phase 2: Core Features (Next)
-- Organizations management
-- Locations management
-- Contacts management
+### Phase 2: Core Features ✅ COMPLETE
+- ✅ Organizations CRUD
+- ✅ Locations CRUD
+- ✅ Contacts CRUD
+- ✅ Full TypeScript types
+- ✅ API service layer
+- ✅ Advanced filtering & search
+- ✅ Custom user manager
 
-### Phase 3: Documentation
-- Document creation and editing
-- File attachments
-- Search functionality
+### Phase 3: Documentation ✅ COMPLETE
+- ✅ Documentation CRUD
+- ✅ Versioning support
+- ✅ Publish/unpublish features
+- ✅ Category organization
+- ⏳ File attachments (planned)
 
-### Phase 4: Security
-- Password vault
-- Encrypted storage
-- Access controls
+### Phase 4: Security ✅ COMPLETE
+- ✅ Password vault CRUD
+- ✅ Encrypted field support
+- ⏳ Password encryption (planned)
+- ⏳ Access controls (planned)
 
-### Phase 5: Configuration Management
-- Configuration tracking
-- Version history
-- Change logs
+### Phase 5: Configuration Management ✅ COMPLETE
+- ✅ Configuration CRUD
+- ✅ Version tracking
+- ✅ Configuration types
+- ⏳ Change logs (planned)
+
+### Phase 6: Advanced Features (Next)
+- ⏳ File attachments for documents
+- ⏳ Team & group access control
+- ⏳ Audit logging
+- ⏳ Two-factor authentication
+- ⏳ Full-text search
+- ⏳ API rate limiting
 
 ---
 

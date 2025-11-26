@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'corsheaders',
+    'django_filters',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -73,18 +74,41 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='techvault'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
-}
+# ------------------------------------------------------------------
+# DATABASE CONFIGURATION
+# ------------------------------------------------------------------
 
+# Use SQLite when running locally (DEBUG=True or ENVIRONMENT=local/dev)
+# Use PostgreSQL in production (ENVIRONMENT=production or DEBUG=False)
+ENVIRONMENT = config("ENVIRONMENT", default="development")   # e.g. "development" or "production"
+
+if ENVIRONMENT in ["development", "local", "dev"] or os.getenv("USE_SQLITE", "0") == "1":
+    # SQLite for local development
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+else:
+    # PostgreSQL for staging / production
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("DB_NAME"),
+            "USER": config("DB_USER"),
+            "PASSWORD": config("DB_PASSWORD"),
+            "HOST": config("DB_HOST", default="localhost"),
+            "PORT": config("DB_PORT", default="5432"),
+            # Recommended production settings
+            "CONN_MAX_AGE": 60,
+            "OPTIONS": {
+                "sslmode": config("DB_SSLMODE", default="prefer"),
+            },
+            # Helps with connection issues in containers
+            "DISABLE_SERVER_SIDE_CURSORS": True,
+        }
+    }
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -140,6 +164,11 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
 }
@@ -170,9 +199,11 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Don't require email verification for now
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
 
 # dj-rest-auth Settings
 REST_AUTH = {
@@ -181,6 +212,7 @@ REST_AUTH = {
     'JWT_AUTH_REFRESH_COOKIE': 'techvault-refresh-token',
     'JWT_AUTH_HTTPONLY': False,
     'USER_DETAILS_SERIALIZER': 'users.serializers.UserSerializer',
+    'LOGIN_SERIALIZER': 'users.serializers.LoginSerializer',
     'REGISTER_SERIALIZER': 'users.serializers.RegisterSerializer',
 }
 

@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from dj_rest_auth.registration.serializers import RegisterSerializer as BaseRegisterSerializer
+from dj_rest_auth.serializers import LoginSerializer as BaseLoginSerializer
 from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate
 
 User = get_user_model()
 
@@ -17,22 +19,63 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'date_joined', 'is_active']
 
 
+class LoginSerializer(BaseLoginSerializer):
+    """
+    Custom login serializer that uses email instead of username.
+    """
+    username = serializers.CharField(
+        label="Email",
+        write_only=True,
+        help_text="User email address"
+    )
+    email = None  # Remove the default email field
+
+    def validate(self, attrs):
+        email = attrs.get('username')  # 'username' field actually contains email
+        password = attrs.get('password')
+
+        if email and password:
+            self.user = authenticate(
+                request=self.context.get('request'),
+                username=email,  # Authenticate with email as username
+                password=password
+            )
+
+            if not self.user:
+                msg = 'Unable to log in with provided credentials.'
+                raise serializers.ValidationError(msg, code='authorization')
+        else:
+            msg = 'Must include "email" and "password".'
+            raise serializers.ValidationError(msg, code='authorization')
+
+        attrs['user'] = self.user
+        return attrs
+
+
 class RegisterSerializer(BaseRegisterSerializer):
     """
     Custom registration serializer that requires first_name and last_name.
+    Handles email-based authentication instead of username.
     """
     first_name = serializers.CharField(required=True, max_length=150)
     last_name = serializers.CharField(required=True, max_length=150)
 
     def get_cleaned_data(self):
+        # Get data from parent class
         data = super().get_cleaned_data()
         data['first_name'] = self.validated_data.get('first_name', '')
         data['last_name'] = self.validated_data.get('last_name', '')
         return data
 
     def save(self, request):
-        user = super().save(request)
-        user.first_name = self.validated_data.get('first_name', '')
-        user.last_name = self.validated_data.get('last_name', '')
-        user.save()
+        # Get the email from parent validation
+        cleaned_data = self.get_cleaned_data()
+
+        # Create user with our custom manager
+        user = User.objects.create_user(
+            email=cleaned_data.get('email'),
+            password=cleaned_data.get('password1'),
+            first_name=cleaned_data.get('first_name', ''),
+            last_name=cleaned_data.get('last_name', ''),
+        )
         return user
