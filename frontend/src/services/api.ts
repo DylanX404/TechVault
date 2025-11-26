@@ -50,8 +50,11 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // If error is 401 and we haven't retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't attempt to refresh if the request itself was a token refresh (prevent infinite loop)
+    const isRefreshRequest = originalRequest.url?.includes('/api/token/refresh/');
+
+    // If error is 401 and we haven't retried yet and it's not the refresh endpoint
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshRequest) {
       originalRequest._retry = true;
 
       try {
@@ -59,7 +62,10 @@ api.interceptors.response.use(
 
         if (!refreshToken) {
           clearTokens();
-          window.location.href = '/login';
+          // Only redirect if not already on login page
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
           return Promise.reject(error);
         }
 
@@ -68,16 +74,34 @@ api.interceptors.response.use(
           refresh: refreshToken,
         });
 
-        const { access, refresh } = response.data;
-        setTokens({ access, refresh });
+        // Handle both response formats (access_token/refresh_token or access/refresh)
+        const { access, refresh, access_token, refresh_token } = response.data;
+        const newAccessToken = access_token || access;
+        const newRefreshToken = refresh_token || refresh;
+
+        if (!newAccessToken || !newRefreshToken) {
+          console.error('Token refresh failed: Invalid response format', response.data);
+          clearTokens();
+          // Only redirect if not already on login page
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
+          return Promise.reject(error);
+        }
+
+        setTokens({ access: newAccessToken, refresh: newRefreshToken });
 
         // Retry the original request with new token
-        originalRequest.headers.Authorization = `Bearer ${access}`;
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed, clear tokens and redirect to login
+        console.error('Token refresh failed:', refreshError);
         clearTokens();
-        window.location.href = '/login';
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
