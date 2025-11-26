@@ -1,7 +1,8 @@
 import api from './api';
 import {
   Organization, Location, Contact, Documentation,
-  PasswordEntry, Configuration, PaginatedResponse
+  PasswordEntry, Configuration, NetworkDevice, EndpointUser,
+  Server, Peripheral, DiagramData, PaginatedResponse
 } from '../types/core';
 
 // Dashboard APIs
@@ -119,4 +120,76 @@ export const configurationAPI = {
     api.delete(`/api/configurations/${id}/`),
   byOrganization: (organizationId: string) =>
     api.get<Configuration[]>('/api/configurations/by_organization/', { params: { organization_id: organizationId } }),
+};
+
+// Network Device APIs
+export const networkDeviceAPI = {
+  getAll: (params?: Record<string, any>) =>
+    api.get<PaginatedResponse<NetworkDevice>>('/api/network-devices/', { params }),
+  getById: (id: string) =>
+    api.get<NetworkDevice>(`/api/network-devices/${id}/`),
+  create: (data: Partial<NetworkDevice>) =>
+    api.post<NetworkDevice>('/api/network-devices/', data),
+  update: (id: string, data: Partial<NetworkDevice>) =>
+    api.patch<NetworkDevice>(`/api/network-devices/${id}/`, data),
+  delete: (id: string) =>
+    api.delete(`/api/network-devices/${id}/`),
+  byOrganization: (organizationId: string) =>
+    api.get<NetworkDevice[]>('/api/network-devices/by_organization/', { params: { organization_id: organizationId } }),
+};
+
+// Endpoint User APIs
+export const endpointUserAPI = {
+  getAll: (params?: Record<string, any>) =>
+    api.get<PaginatedResponse<EndpointUser>>('/api/endpoint-users/', { params }),
+  getById: (id: string) =>
+    api.get<EndpointUser>(`/api/endpoint-users/${id}/`),
+  create: (data: Partial<EndpointUser>) =>
+    api.post<EndpointUser>('/api/endpoint-users/', data),
+  update: (id: string, data: Partial<EndpointUser>) =>
+    api.patch<EndpointUser>(`/api/endpoint-users/${id}/`, data),
+  delete: (id: string) =>
+    api.delete(`/api/endpoint-users/${id}/`),
+  byOrganization: (organizationId: string) =>
+    api.get<EndpointUser[]>('/api/endpoint-users/by_organization/', { params: { organization_id: organizationId } }),
+};
+
+// Server APIs
+export const serverAPI = {
+  getAll: (params?: Record<string, any>) =>
+    api.get<PaginatedResponse<Server>>('/api/servers/', { params }),
+  getById: (id: string) =>
+    api.get<Server>(`/api/servers/${id}/`),
+  create: (data: Partial<Server>) =>
+    api.post<Server>('/api/servers/', data),
+  update: (id: string, data: Partial<Server>) =>
+    api.patch<Server>(`/api/servers/${id}/`, data),
+  delete: (id: string) =>
+    api.delete(`/api/servers/${id}/`),
+  byOrganization: (organizationId: string) =>
+    api.get<Server[]>('/api/servers/by_organization/', { params: { organization_id: organizationId } }),
+};
+
+// Peripheral APIs
+export const peripheralAPI = {
+  getAll: (params?: Record<string, any>) =>
+    api.get<PaginatedResponse<Peripheral>>('/api/peripherals/', { params }),
+  getById: (id: string) =>
+    api.get<Peripheral>(`/api/peripherals/${id}/`),
+  create: (data: Partial<Peripheral>) =>
+    api.post<Peripheral>('/api/peripherals/', data),
+  update: (id: string, data: Partial<Peripheral>) =>
+    api.patch<Peripheral>(`/api/peripherals/${id}/`, data),
+  delete: (id: string) =>
+    api.delete(`/api/peripherals/${id}/`),
+  byOrganization: (organizationId: string) =>
+    api.get<Peripheral[]>('/api/peripherals/by_organization/', { params: { organization_id: organizationId } }),
+};
+
+// Diagram APIs
+export const diagramAPI = {
+  getData: (organizationId?: string) => {
+    const params = organizationId ? { organization_id: organizationId } : undefined;
+    return api.get<DiagramData>('/api/diagram/data/', { params });
+  },
 };

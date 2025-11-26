@@ -7,9 +7,10 @@ from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from users.views import UserProfileView
 from core.views import (
     OrganizationViewSet, LocationViewSet, ContactViewSet,
-    DocumentationViewSet, PasswordEntryViewSet, ConfigurationViewSet
+    DocumentationViewSet, PasswordEntryViewSet, ConfigurationViewSet,
+    NetworkDeviceViewSet, EndpointUserViewSet, ServerViewSet, PeripheralViewSet
 )
-from .views import dashboard_stats
+from .views import dashboard_stats, diagram_data
 
 app_name = 'api'
 
@@ -20,6 +21,10 @@ router.register(r'contacts', ContactViewSet, basename='contact')
 router.register(r'documentations', DocumentationViewSet, basename='documentation')
 router.register(r'passwords', PasswordEntryViewSet, basename='password')
 router.register(r'configurations', ConfigurationViewSet, basename='configuration')
+router.register(r'network-devices', NetworkDeviceViewSet, basename='network-device')
+router.register(r'endpoint-users', EndpointUserViewSet, basename='endpoint-user')
+router.register(r'servers', ServerViewSet, basename='server')
+router.register(r'peripherals', PeripheralViewSet, basename='peripheral')
 
 urlpatterns = [
     # Router URLs
@@ -27,6 +32,9 @@ urlpatterns = [
 
     # Dashboard endpoints
     path('dashboard/stats/', dashboard_stats, name='dashboard-stats'),
+
+    # Diagram endpoints
+    path('diagram/data/', diagram_data, name='diagram-data'),
 
     # User endpoints
     path('user/profile/', UserProfileView.as_view(), name='user-profile'),

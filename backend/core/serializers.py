@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Organization, Location, Contact, Documentation,
-    PasswordEntry, Configuration
+    PasswordEntry, Configuration, NetworkDevice, EndpointUser, Server, Peripheral
 )
 from users.serializers import UserSerializer
 
@@ -86,6 +86,75 @@ class ConfigurationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'organization', 'organization_name', 'name', 'config_type',
             'content', 'description', 'version', 'is_active', 'created_by',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+
+class NetworkDeviceSerializer(serializers.ModelSerializer):
+    organization_name = serializers.CharField(source='organization.name', read_only=True)
+    location_name = serializers.CharField(source='location.name', read_only=True, allow_null=True)
+    created_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = NetworkDevice
+        fields = [
+            'id', 'organization', 'organization_name', 'name', 'device_type',
+            'internet_provider', 'internet_speed', 'manufacturer', 'model',
+            'ip_address', 'mac_address', 'serial_number', 'firmware_version',
+            'location', 'location_name', 'notes', 'is_active', 'created_by',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+
+class EndpointUserSerializer(serializers.ModelSerializer):
+    organization_name = serializers.CharField(source='organization.name', read_only=True)
+    location_name = serializers.CharField(source='location.name', read_only=True, allow_null=True)
+    assigned_to_name = serializers.CharField(source='assigned_to.full_name', read_only=True, allow_null=True)
+    created_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = EndpointUser
+        fields = [
+            'id', 'organization', 'organization_name', 'name', 'device_type',
+            'assigned_to', 'assigned_to_name', 'manufacturer', 'model', 'cpu',
+            'ram', 'storage', 'gpu', 'operating_system', 'software_installed',
+            'ip_address', 'mac_address', 'hostname', 'serial_number',
+            'purchase_date', 'warranty_expiry', 'location', 'location_name',
+            'notes', 'is_active', 'created_by', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+
+class ServerSerializer(serializers.ModelSerializer):
+    organization_name = serializers.CharField(source='organization.name', read_only=True)
+    location_name = serializers.CharField(source='location.name', read_only=True, allow_null=True)
+    created_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Server
+        fields = [
+            'id', 'organization', 'organization_name', 'name', 'server_type',
+            'role', 'manufacturer', 'model', 'cpu', 'ram', 'storage',
+            'operating_system', 'software_installed', 'ip_address', 'mac_address',
+            'hostname', 'serial_number', 'location', 'location_name', 'notes',
+            'is_active', 'created_by', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+
+class PeripheralSerializer(serializers.ModelSerializer):
+    organization_name = serializers.CharField(source='organization.name', read_only=True)
+    location_name = serializers.CharField(source='location.name', read_only=True, allow_null=True)
+    created_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Peripheral
+        fields = [
+            'id', 'organization', 'organization_name', 'name', 'device_type',
+            'manufacturer', 'model', 'ip_address', 'mac_address', 'serial_number',
+            'location', 'location_name', 'notes', 'is_active', 'created_by',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']

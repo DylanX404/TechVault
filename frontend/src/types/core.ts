@@ -120,6 +120,126 @@ export interface Configuration {
   updated_at: string;
 }
 
+export interface NetworkDevice {
+  id: string;
+  organization: string;
+  organization_name: string;
+  name: string;
+  device_type: 'firewall' | 'router' | 'firewall_router' | 'switch' | 'wifi' | 'other';
+  internet_provider: string;
+  internet_speed: string;
+  manufacturer: string;
+  model: string;
+  ip_address: string;
+  mac_address: string;
+  serial_number: string;
+  firmware_version: string;
+  location: string | null;
+  location_name: string | null;
+  notes: string;
+  is_active: boolean;
+  created_by: {
+    id: number;
+    email: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EndpointUser {
+  id: string;
+  organization: string;
+  organization_name: string;
+  name: string;
+  device_type: 'desktop' | 'laptop' | 'workstation' | 'other';
+  assigned_to: string | null;
+  assigned_to_name: string | null;
+  manufacturer: string;
+  model: string;
+  cpu: string;
+  ram: string;
+  storage: string;
+  gpu: string;
+  operating_system: string;
+  software_installed: string;
+  ip_address: string;
+  mac_address: string;
+  hostname: string;
+  serial_number: string;
+  purchase_date: string | null;
+  warranty_expiry: string | null;
+  location: string | null;
+  location_name: string | null;
+  notes: string;
+  is_active: boolean;
+  created_by: {
+    id: number;
+    email: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Server {
+  id: string;
+  organization: string;
+  organization_name: string;
+  name: string;
+  server_type: 'physical' | 'virtual' | 'cloud' | 'container' | 'other';
+  role: string;
+  manufacturer: string;
+  model: string;
+  cpu: string;
+  ram: string;
+  storage: string;
+  operating_system: string;
+  software_installed: string;
+  ip_address: string;
+  mac_address: string;
+  hostname: string;
+  serial_number: string;
+  location: string | null;
+  location_name: string | null;
+  notes: string;
+  is_active: boolean;
+  created_by: {
+    id: number;
+    email: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Peripheral {
+  id: string;
+  organization: string;
+  organization_name: string;
+  name: string;
+  device_type: 'printer' | 'scanner' | 'multifunction' | 'ups' | 'nas' | 'other';
+  manufacturer: string;
+  model: string;
+  ip_address: string;
+  mac_address: string;
+  serial_number: string;
+  location: string | null;
+  location_name: string | null;
+  notes: string;
+  is_active: boolean;
+  created_by: {
+    id: number;
+    email: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DiagramData {
+  network_devices: NetworkDevice[];
+  endpoint_users: EndpointUser[];
+  servers: Server[];
+  peripherals: Peripheral[];
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;

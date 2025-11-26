@@ -5,11 +5,12 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from .models import (
     Organization, Location, Contact, Documentation,
-    PasswordEntry, Configuration
+    PasswordEntry, Configuration, NetworkDevice, EndpointUser, Server, Peripheral
 )
 from .serializers import (
     OrganizationSerializer, LocationSerializer, ContactSerializer,
-    DocumentationSerializer, PasswordEntrySerializer, ConfigurationSerializer
+    DocumentationSerializer, PasswordEntrySerializer, ConfigurationSerializer,
+    NetworkDeviceSerializer, EndpointUserSerializer, ServerSerializer, PeripheralSerializer
 )
 
 
@@ -198,5 +199,105 @@ class ConfigurationViewSet(viewsets.ModelViewSet):
         if org_id:
             configurations = Configuration.objects.filter(organization_id=org_id)
             serializer = self.get_serializer(configurations, many=True)
+            return Response(serializer.data)
+        return Response([], status=status.HTTP_400_BAD_REQUEST)
+
+
+class NetworkDeviceViewSet(viewsets.ModelViewSet):
+    """ViewSet for NetworkDevice CRUD operations."""
+    serializer_class = NetworkDeviceSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['organization', 'device_type', 'location', 'is_active']
+    search_fields = ['name', 'manufacturer', 'model', 'ip_address']
+    ordering_fields = ['name', 'device_type', 'created_at']
+    ordering = ['organization', 'device_type', 'name']
+
+    def get_queryset(self):
+        return NetworkDevice.objects.select_related('organization', 'location')
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def by_organization(self, request):
+        org_id = request.query_params.get('organization_id')
+        if org_id:
+            devices = NetworkDevice.objects.filter(organization_id=org_id)
+            serializer = self.get_serializer(devices, many=True)
+            return Response(serializer.data)
+        return Response([], status=status.HTTP_400_BAD_REQUEST)
+
+
+class EndpointUserViewSet(viewsets.ModelViewSet):
+    """ViewSet for EndpointUser CRUD operations."""
+    serializer_class = EndpointUserSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['organization', 'device_type', 'assigned_to', 'location', 'is_active']
+    search_fields = ['name', 'manufacturer', 'model', 'hostname', 'ip_address']
+    ordering_fields = ['name', 'device_type', 'created_at']
+    ordering = ['organization', 'device_type', 'name']
+
+    def get_queryset(self):
+        return EndpointUser.objects.select_related('organization', 'location', 'assigned_to')
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def by_organization(self, request):
+        org_id = request.query_params.get('organization_id')
+        if org_id:
+            endpoints = EndpointUser.objects.filter(organization_id=org_id)
+            serializer = self.get_serializer(endpoints, many=True)
+            return Response(serializer.data)
+        return Response([], status=status.HTTP_400_BAD_REQUEST)
+
+
+class ServerViewSet(viewsets.ModelViewSet):
+    """ViewSet for Server CRUD operations."""
+    serializer_class = ServerSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['organization', 'server_type', 'location', 'is_active']
+    search_fields = ['name', 'role', 'manufacturer', 'model', 'hostname', 'ip_address']
+    ordering_fields = ['name', 'server_type', 'created_at']
+    ordering = ['organization', 'server_type', 'name']
+
+    def get_queryset(self):
+        return Server.objects.select_related('organization', 'location')
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def by_organization(self, request):
+        org_id = request.query_params.get('organization_id')
+        if org_id:
+            servers = Server.objects.filter(organization_id=org_id)
+            serializer = self.get_serializer(servers, many=True)
+            return Response(serializer.data)
+        return Response([], status=status.HTTP_400_BAD_REQUEST)
+
+
+class PeripheralViewSet(viewsets.ModelViewSet):
+    """ViewSet for Peripheral CRUD operations."""
+    serializer_class = PeripheralSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['organization', 'device_type', 'location', 'is_active']
+    search_fields = ['name', 'manufacturer', 'model', 'ip_address']
+    ordering_fields = ['name', 'device_type', 'created_at']
+    ordering = ['organization', 'device_type', 'name']
+
+    def get_queryset(self):
+        return Peripheral.objects.select_related('organization', 'location')
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def by_organization(self, request):
+        org_id = request.query_params.get('organization_id')
+        if org_id:
+            peripherals = Peripheral.objects.filter(organization_id=org_id)
+            serializer = self.get_serializer(peripherals, many=True)
             return Response(serializer.data)
         return Response([], status=status.HTTP_400_BAD_REQUEST)
