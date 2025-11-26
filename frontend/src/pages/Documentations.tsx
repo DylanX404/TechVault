@@ -1,36 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ListHeader } from '../components/ListHeader';
+import { EmptyOrgState } from '../components/EmptyOrgState';
+import { useOrganization } from '../contexts/OrganizationContext';
 import { documentationAPI } from '../services/core';
 import { Documentation } from '../types/core';
 import { FileText, Trash2, Edit, ChevronRight } from 'lucide-react';
 
 export const Documentations: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { selectedOrg } = useOrganization();
   const [docs, setDocs] = useState<Documentation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const orgId = searchParams.get('org');
-
   useEffect(() => {
-    fetchDocs();
-  }, [orgId]);
+    if (selectedOrg) {
+      fetchDocs();
+    } else {
+      setDocs([]);
+      setLoading(false);
+    }
+  }, [selectedOrg]);
 
   const fetchDocs = async () => {
+    if (!selectedOrg) return;
+
     try {
       setLoading(true);
-      let response;
-      if (orgId) {
-        response = await documentationAPI.byOrganization(orgId);
-        setDocs(Array.isArray(response.data) ? response.data : response.data.results);
-      } else {
-        response = await documentationAPI.getAll();
-        setDocs(response.data.results);
-      }
+      const response = await documentationAPI.byOrganization(selectedOrg.id.toString());
+      const data: Documentation[] = Array.isArray(response.data)
+        ? response.data
+        : ((response.data as any)?.results || []);
+      setDocs(data);
+      setError(null);
     } catch (err) {
       setError('Failed to load documentations');
     } finally {
@@ -52,8 +57,13 @@ export const Documentations: React.FC = () => {
   return (
     <div className="space-y-6">
       <ListHeader title="Documentation" onAddClick={() => navigate('/documentations/new')} onSearch={() => {}} searchPlaceholder="Search documentations..." />
-      {error && <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-200">{error}</div>}
-      {loading ? (
+
+      {!selectedOrg ? (
+        <EmptyOrgState />
+      ) : (
+        <>
+          {error && <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-200">{error}</div>}
+          {loading ? (
         <div className="text-center py-12"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>
       ) : docs.length === 0 ? (
         <Card className="p-8 text-center">
@@ -79,6 +89,8 @@ export const Documentations: React.FC = () => {
             </Card>
           ))}
         </div>
+          )}
+        </>
       )}
     </div>
   );
