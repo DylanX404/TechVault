@@ -26,6 +26,10 @@ import { ConfigurationDetail } from '@/pages/ConfigurationDetail';
 import { ConfigurationForm } from '@/pages/ConfigurationForm';
 import { Endpoints } from '@/pages/Endpoints';
 import { Diagram } from '@/pages/Diagram';
+import { NetworkDeviceForm } from '@/pages/NetworkDeviceForm';
+import { EndpointUserForm } from '@/pages/EndpointUserForm';
+import { ServerForm } from '@/pages/ServerForm';
+import { PeripheralForm } from '@/pages/PeripheralForm';
 import Settings from '@/pages/Settings';
 
 function App() {
@@ -62,6 +66,14 @@ function App() {
             <Route path="documentations/:id/edit" element={<DocumentationForm />} />
             <Route path="documentations/new" element={<DocumentationForm />} />
             <Route path="endpoints" element={<Endpoints />} />
+            <Route path="network-devices/new" element={<NetworkDeviceForm />} />
+            <Route path="network-devices/:id/edit" element={<NetworkDeviceForm />} />
+            <Route path="endpoint-users/new" element={<EndpointUserForm />} />
+            <Route path="endpoint-users/:id/edit" element={<EndpointUserForm />} />
+            <Route path="servers/new" element={<ServerForm />} />
+            <Route path="servers/:id/edit" element={<ServerForm />} />
+            <Route path="peripherals/new" element={<PeripheralForm />} />
+            <Route path="peripherals/:id/edit" element={<PeripheralForm />} />
             <Route path="diagram" element={<Diagram />} />
             <Route path="passwords" element={<Passwords />} />
             <Route path="passwords/:id" element={<PasswordDetail />} />
