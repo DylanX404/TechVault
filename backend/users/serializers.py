@@ -88,14 +88,14 @@ class JWTSerializer(BaseJWTSerializer):
     Custom JWT serializer to return tokens with expected field names.
     Frontend expects 'access_token' and 'refresh_token' instead of 'access' and 'refresh'.
     """
-    access_token = serializers.CharField(source='access')
-    refresh_token = serializers.CharField(source='refresh')
+    def to_representation(self, instance):
+        """Override to rename token fields."""
+        representation = super().to_representation(instance)
 
-    class Meta:
-        fields = ['access_token', 'refresh_token', 'user']
+        # Rename fields to match frontend expectations
+        if 'access' in representation:
+            representation['access_token'] = representation.pop('access')
+        if 'refresh' in representation:
+            representation['refresh_token'] = representation.pop('refresh')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Remove the original fields
-        self.fields.pop('access', None)
-        self.fields.pop('refresh', None)
+        return representation
