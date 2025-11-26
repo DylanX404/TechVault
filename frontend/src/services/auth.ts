@@ -4,30 +4,40 @@ import { LoginCredentials, RegisterData, User } from '@/types/auth';
 export const authService = {
   async login(credentials: LoginCredentials): Promise<{ user: User; tokens: { access: string; refresh: string } }> {
     const response = await api.post('/api/auth/login/', credentials);
-    const { access_token, refresh_token, user } = response.data;
+    // dj-rest-auth with JWT returns 'access' and 'refresh' (or 'access_token'/'refresh_token' with custom serializer)
+    const { access, refresh, access_token, refresh_token, user } = response.data;
 
-    setTokens({ access: access_token, refresh: refresh_token });
+    // Handle both response formats
+    const accessToken = access_token || access;
+    const refreshToken = refresh_token || refresh;
+
+    setTokens({ access: accessToken, refresh: refreshToken });
 
     return {
       user,
       tokens: {
-        access: access_token,
-        refresh: refresh_token,
+        access: accessToken,
+        refresh: refreshToken,
       },
     };
   },
 
   async register(data: RegisterData): Promise<{ user: User; tokens: { access: string; refresh: string } }> {
     const response = await api.post('/api/auth/registration/', data);
-    const { access_token, refresh_token, user } = response.data;
+    // dj-rest-auth with JWT returns 'access' and 'refresh' (or 'access_token'/'refresh_token' with custom serializer)
+    const { access, refresh, access_token, refresh_token, user } = response.data;
 
-    setTokens({ access: access_token, refresh: refresh_token });
+    // Handle both response formats
+    const accessToken = access_token || access;
+    const refreshToken = refresh_token || refresh;
+
+    setTokens({ access: accessToken, refresh: refreshToken });
 
     return {
       user,
       tokens: {
-        access: access_token,
-        refresh: refresh_token,
+        access: accessToken,
+        refresh: refreshToken,
       },
     };
   },
