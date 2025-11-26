@@ -3,7 +3,7 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { diagramAPI } from '@/services/core';
 import type { DiagramData } from '@/types/core';
 import { Loader2, Network, Monitor, HardDrive, Printer, Globe, Shield, Wifi, Cpu, MemoryStick, Database, FileDown, ChevronDown } from 'lucide-react';
-import { exportAsPNG, exportAsJSON, exportAsSVG, printDiagram } from '@/utils/diagramExport';
+import { exportAsPNG, exportAsJSON, exportAsSVG, exportAsPDF, printDiagram } from '@/utils/diagramExport';
 
 export function Diagram() {
   const { selectedOrg } = useOrganization();
@@ -66,7 +66,7 @@ export function Diagram() {
     );
   }
 
-  const handleExport = async (format: 'png' | 'json' | 'svg' | 'print') => {
+  const handleExport = async (format: 'png' | 'json' | 'svg' | 'pdf' | 'print') => {
     if (!data || !selectedOrg) return;
 
     setExporting(true);
@@ -86,6 +86,9 @@ export function Diagram() {
           break;
         case 'svg':
           exportAsSVG(data, selectedOrg.name);
+          break;
+        case 'pdf':
+          await exportAsPDF(data, selectedOrg.name);
           break;
         case 'print':
           printDiagram();
@@ -143,26 +146,16 @@ export function Diagram() {
             <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-10">
               <div className="py-1">
                 <button
-                  onClick={() => handleExport('png')}
+                  onClick={() => handleExport('pdf')}
                   className="w-full text-left px-4 py-2 hover:bg-accent transition-colors flex items-center gap-3"
                 >
                   <FileDown className="h-4 w-4" />
                   <div>
-                    <div className="font-medium">Export as PNG</div>
-                    <div className="text-xs text-muted-foreground">High-quality image</div>
+                    <div className="font-medium">Export as PDF</div>
+                    <div className="text-xs text-muted-foreground">Professional document</div>
                   </div>
                 </button>
 
-                <button
-                  onClick={() => handleExport('svg')}
-                  className="w-full text-left px-4 py-2 hover:bg-accent transition-colors flex items-center gap-3"
-                >
-                  <FileDown className="h-4 w-4" />
-                  <div>
-                    <div className="font-medium">Export as SVG</div>
-                    <div className="text-xs text-muted-foreground">Vector graphic</div>
-                  </div>
-                </button>
 
                 <button
                   onClick={() => handleExport('json')}
@@ -175,18 +168,6 @@ export function Diagram() {
                   </div>
                 </button>
 
-                <div className="border-t border-border my-1"></div>
-
-                <button
-                  onClick={() => handleExport('print')}
-                  className="w-full text-left px-4 py-2 hover:bg-accent transition-colors flex items-center gap-3"
-                >
-                  <Printer className="h-4 w-4" />
-                  <div>
-                    <div className="font-medium">Print / Save as PDF</div>
-                    <div className="text-xs text-muted-foreground">Browser print dialog</div>
-                  </div>
-                </button>
               </div>
             </div>
           )}
@@ -253,116 +234,78 @@ function NetworkDiagram({ devices }: { devices: DiagramData['network_devices'] }
     <div className="flex flex-col items-center space-y-6">
       {/* Internet */}
       <div className="flex flex-col items-center">
-        <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center">
-          <Globe className="h-10 w-10 text-primary" />
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+          <Globe className="h-10 w-10 text-white" />
         </div>
-        <p className="text-sm font-medium mt-2">Internet</p>
+        <span className="mt-2 text-sm font-medium">Internet</span>
       </div>
 
-      {/* Connection Line */}
-      {firewalls.length > 0 && (
-        <div className="w-0.5 h-12 bg-border"></div>
-      )}
+      {/* Connection line */}
+      <div className="w-0.5 h-8 bg-border" />
 
-      {/* Firewall/Router */}
+      {/* Firewalls/Routers Layer */}
       {firewalls.length > 0 && (
-        <div className="flex flex-col items-center">
-          <div className="flex gap-4">
-            {firewalls.map((firewall) => (
-              <div key={firewall.id} className="flex flex-col items-center">
-                <div className="w-24 h-24 rounded-lg bg-accent border-2 border-border flex items-center justify-center hover:border-primary transition-colors">
-                  <Shield className="h-12 w-12 text-foreground" />
+        <div className="flex flex-col items-center w-full">
+          <div className="flex flex-wrap justify-center gap-4">
+            {firewalls.map((device) => (
+              <div
+                key={device.id}
+                className="flex flex-col items-center p-4 rounded-lg border border-border hover:border-primary transition-colors bg-card min-w-[160px]"
+              >
+                <div className="w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-red-500" />
                 </div>
-                <div className="mt-2 text-center max-w-[180px]">
-                  <p className="text-sm font-medium truncate">
-                    {firewall.name}
-                  </p>
-                  <div className="text-xs space-y-0.5 mt-1">
-                    {firewall.manufacturer && (
-                      <p className="text-muted-foreground truncate">
-                        {firewall.manufacturer} {firewall.model}
-                      </p>
-                    )}
-                    {firewall.internet_provider && (
-                      <p className="text-muted-foreground">
-                        {firewall.internet_provider} - {firewall.internet_speed}
-                      </p>
-                    )}
-                    {firewall.ip_address && (
-                      <p className="font-mono text-muted-foreground">
-                        {firewall.ip_address}
-                      </p>
-                    )}
-                    {firewall.firmware_version && (
-                      <p className="text-muted-foreground truncate">
-                        FW: {firewall.firmware_version}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                <span className="mt-2 text-sm font-medium text-center">{device.name}</span>
+                {device.manufacturer && (
+                  <span className="text-xs text-muted-foreground">{device.manufacturer}</span>
+                )}
+                {device.ip_address && (
+                  <span className="text-xs font-mono text-muted-foreground mt-1">{device.ip_address}</span>
+                )}
               </div>
             ))}
           </div>
+          <div className="w-0.5 h-8 bg-border mt-4" />
         </div>
       )}
 
-      {/* Connection Lines */}
-      {(switches.length > 0 || wifiDevices.length > 0) && firewalls.length > 0 && (
-        <div className="flex items-center justify-center gap-8">
-          <div className="w-0.5 h-12 bg-border"></div>
-          <div className="w-0.5 h-12 bg-border"></div>
-        </div>
-      )}
-
-      {/* Switches and WiFi */}
-      <div className="flex gap-12">
-        {switches.length > 0 && (
-          <div className="flex flex-col items-center">
-            <p className="text-sm font-semibold mb-3">Switches</p>
-            <div className="grid grid-cols-2 gap-4">
-              {switches.map((sw) => (
-                <div key={sw.id} className="flex flex-col items-center">
-                  <div className="w-20 h-20 rounded-lg bg-accent border border-border flex items-center justify-center hover:border-primary transition-colors">
-                    <Network className="h-10 w-10 text-foreground" />
-                  </div>
-                  <div className="mt-1 text-center max-w-[140px]">
-                    <p className="text-xs font-medium truncate">{sw.name}</p>
-                    <div className="text-xs space-y-0.5 mt-1">
-                      {sw.manufacturer && (
-                        <p className="text-muted-foreground truncate">
-                          {sw.manufacturer}
-                        </p>
-                      )}
-                      {sw.model && (
-                        <p className="text-muted-foreground truncate">
-                          {sw.model}
-                        </p>
-                      )}
-                      {sw.ip_address && (
-                        <p className="font-mono text-muted-foreground text-[10px]">
-                          {sw.ip_address}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+      {/* Switches Layer */}
+      {switches.length > 0 && (
+        <div className="flex flex-col items-center w-full">
+          <div className="flex flex-wrap justify-center gap-4">
+            {switches.map((device) => (
+              <div
+                key={device.id}
+                className="flex flex-col items-center p-4 rounded-lg border border-border hover:border-primary transition-colors bg-card min-w-[160px]"
+              >
+                <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <Network className="h-6 w-6 text-green-500" />
                 </div>
-              ))}
-            </div>
+                <span className="mt-2 text-sm font-medium text-center">{device.name}</span>
+                {device.manufacturer && (
+                  <span className="text-xs text-muted-foreground">{device.manufacturer}</span>
+                )}
+                {device.ip_address && (
+                  <span className="text-xs font-mono text-muted-foreground mt-1">{device.ip_address}</span>
+                )}
+              </div>
+            ))}
           </div>
-        )}
 
-        {wifiDevices.length > 0 && (
-          <div className="flex flex-col items-center">
-            <p className="text-sm font-semibold mb-3">WiFi Access Points</p>
-            <div className="grid grid-cols-2 gap-4">
-              {wifiDevices.map((wifi) => (
-                <div key={wifi.id} className="flex flex-col items-center">
-                  <div className="w-20 h-20 rounded-lg bg-accent border border-border flex items-center justify-center hover:border-primary transition-colors">
-                    <Wifi className="h-10 w-10 text-foreground" />
-                  </div>
-                  <div className="mt-1 text-center max-w-[140px]">
-                    <p className="text-xs font-medium truncate">{wifi.name}</p>
-                    <div className="text-xs space-y-0.5 mt-1">
+          {/* WiFi Devices */}
+          {wifiDevices.length > 0 && (
+            <div className="mt-6 w-full">
+              <div className="flex flex-wrap justify-center gap-4">
+                {wifiDevices.map((wifi) => (
+                  <div
+                    key={wifi.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary transition-colors bg-card"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                      <Wifi className="h-5 w-5 text-purple-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{wifi.name}</p>
                       {wifi.manufacturer && (
                         <p className="text-muted-foreground truncate">
                           {wifi.manufacturer}
@@ -380,12 +323,12 @@ function NetworkDiagram({ devices }: { devices: DiagramData['network_devices'] }
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -584,55 +527,30 @@ function PeripheralsDiagram({ peripherals }: { peripherals: DiagramData['periphe
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {peripherals.map((peripheral) => (
         <div
           key={peripheral.id}
           className="p-4 rounded-lg border border-border hover:border-primary transition-colors bg-card"
         >
-          <div className="flex items-start gap-3 mb-3">
-            <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
-              <Printer className="h-6 w-6 text-foreground" />
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
+              <Printer className="h-5 w-5 text-foreground" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium truncate">{peripheral.name}</p>
-              <div className="mt-1 px-2 py-0.5 rounded text-xs bg-primary/10 text-primary inline-block">
-                {peripheral.device_type}
-              </div>
+              <p className="text-xs text-muted-foreground">{peripheral.device_type}</p>
+              {peripheral.manufacturer && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {peripheral.manufacturer} {peripheral.model || ''}
+                </p>
+              )}
+              {peripheral.serial_number && (
+                <p className="text-xs font-mono text-muted-foreground mt-1">
+                  S/N: {peripheral.serial_number}
+                </p>
+              )}
             </div>
-          </div>
-
-          <div className="space-y-1 text-xs">
-            {peripheral.manufacturer && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground">Manufacturer:</span>
-                <span className="truncate">{peripheral.manufacturer}</span>
-              </div>
-            )}
-            {peripheral.model && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground">Model:</span>
-                <span className="truncate">{peripheral.model}</span>
-              </div>
-            )}
-            {peripheral.ip_address && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground">IP:</span>
-                <span className="font-mono">{peripheral.ip_address}</span>
-              </div>
-            )}
-            {peripheral.mac_address && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground">MAC:</span>
-                <span className="font-mono truncate">{peripheral.mac_address}</span>
-              </div>
-            )}
-            {peripheral.serial_number && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground">S/N:</span>
-                <span className="truncate">{peripheral.serial_number}</span>
-              </div>
-            )}
           </div>
         </div>
       ))}
