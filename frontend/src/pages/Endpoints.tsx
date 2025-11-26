@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { networkDeviceAPI, endpointUserAPI, serverAPI, peripheralAPI } from '@/services/core';
 import type { NetworkDevice, EndpointUser, Server, Peripheral } from '@/types/core';
@@ -7,6 +7,7 @@ import { Plus, Network, Monitor, HardDrive, Printer, Loader2 } from 'lucide-reac
 
 export function Endpoints() {
   const { selectedOrg } = useOrganization();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'network' | 'users' | 'servers' | 'peripherals'>('network');
   const [networkDevices, setNetworkDevices] = useState<NetworkDevice[]>([]);
   const [endpointUsers, setEndpointUsers] = useState<EndpointUser[]>([]);
@@ -58,6 +59,15 @@ export function Endpoints() {
     );
   }
 
+  const getAddRoute = () => {
+    switch (activeTab) {
+      case 'network': return '/network-devices/new';
+      case 'users': return '/endpoint-users/new';
+      case 'servers': return '/servers/new';
+      case 'peripherals': return '/peripherals/new';
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -67,6 +77,14 @@ export function Endpoints() {
             Manage your network infrastructure and devices
           </p>
         </div>
+        <button
+          onClick={() => navigate(getAddRoute())}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          disabled={!selectedOrg}
+        >
+          <Plus className="h-4 w-4" />
+          Add {activeTab === 'network' ? 'Device' : activeTab === 'users' ? 'Endpoint' : activeTab === 'servers' ? 'Server' : 'Peripheral'}
+        </button>
       </div>
 
       <div className="border-b border-border">
