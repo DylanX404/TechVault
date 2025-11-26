@@ -24,6 +24,8 @@ import { PasswordForm } from '@/pages/PasswordForm';
 import { Configurations } from '@/pages/Configurations';
 import { ConfigurationDetail } from '@/pages/ConfigurationDetail';
 import { ConfigurationForm } from '@/pages/ConfigurationForm';
+import { Endpoints } from '@/pages/Endpoints';
+import { Diagram } from '@/pages/Diagram';
 import Settings from '@/pages/Settings';
 
 function App() {
@@ -59,6 +61,8 @@ function App() {
             <Route path="documentations/:id" element={<DocumentationDetail />} />
             <Route path="documentations/:id/edit" element={<DocumentationForm />} />
             <Route path="documentations/new" element={<DocumentationForm />} />
+            <Route path="endpoints" element={<Endpoints />} />
+            <Route path="diagram" element={<Diagram />} />
             <Route path="passwords" element={<Passwords />} />
             <Route path="passwords/:id" element={<PasswordDetail />} />
             <Route path="passwords/:id/edit" element={<PasswordForm />} />

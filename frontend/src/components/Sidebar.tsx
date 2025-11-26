@@ -16,6 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Wrench,
+  Network,
+  GitBranch,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -50,6 +52,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
     { id: 'locations', label: 'Locations', icon: MapPin, path: '/locations' },
     { id: 'contacts', label: 'Contacts', icon: Users, path: '/contacts' },
     { id: 'documentation', label: 'Documentation', icon: FileText, path: '/documentations' },
+    { id: 'endpoints', label: 'Endpoints', icon: Network, path: '/endpoints' },
+    { id: 'diagram', label: 'Diagram', icon: GitBranch, path: '/diagram' },
     { id: 'passwords', label: 'Passwords', icon: Lock, path: '/passwords' },
     { id: 'configurations', label: 'Configurations', icon: Wrench, path: '/configurations' },
     { id: 'settings', label: 'Settings', icon: SettingsIcon, path: '/settings' },

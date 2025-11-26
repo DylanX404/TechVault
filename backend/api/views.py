@@ -3,7 +3,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from core.models import (
     Organization, Location, Contact, Documentation,
-    PasswordEntry, Configuration
+    PasswordEntry, Configuration, NetworkDevice, EndpointUser, Server, Peripheral
+)
+from core.serializers import (
+    NetworkDeviceSerializer, EndpointUserSerializer, ServerSerializer, PeripheralSerializer
 )
 
 
@@ -33,4 +36,36 @@ def dashboard_stats(request):
         'documentations': Documentation.objects.count(),
         'passwords': PasswordEntry.objects.count(),
         'configurations': Configuration.objects.count(),
+        'network_devices': NetworkDevice.objects.count(),
+        'endpoint_users': EndpointUser.objects.count(),
+        'servers': Server.objects.count(),
+        'peripherals': Peripheral.objects.count(),
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def diagram_data(request):
+    """
+    Get all endpoint data for diagram generation.
+    """
+    org_id = request.query_params.get('organization_id')
+
+    # Filter by organization if provided
+    if org_id:
+        network_devices = NetworkDevice.objects.filter(organization_id=org_id, is_active=True)
+        endpoint_users = EndpointUser.objects.filter(organization_id=org_id, is_active=True)
+        servers = Server.objects.filter(organization_id=org_id, is_active=True)
+        peripherals = Peripheral.objects.filter(organization_id=org_id, is_active=True)
+    else:
+        network_devices = NetworkDevice.objects.filter(is_active=True)
+        endpoint_users = EndpointUser.objects.filter(is_active=True)
+        servers = Server.objects.filter(is_active=True)
+        peripherals = Peripheral.objects.filter(is_active=True)
+
+    return Response({
+        'network_devices': NetworkDeviceSerializer(network_devices, many=True).data,
+        'endpoint_users': EndpointUserSerializer(endpoint_users, many=True).data,
+        'servers': ServerSerializer(servers, many=True).data,
+        'peripherals': PeripheralSerializer(peripherals, many=True).data,
     })

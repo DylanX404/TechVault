@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { Shield, Building2, MapPin, Users, FileText, Lock, Wrench, TrendingUp } from 'lucide-react';
+import { Shield, Building2, MapPin, Users, FileText, Lock, Wrench, TrendingUp, Network } from 'lucide-react';
 import { dashboardAPI } from '@/services/core';
 
 interface DashboardStats {
@@ -11,6 +11,10 @@ interface DashboardStats {
   documentations: number;
   passwords: number;
   configurations: number;
+  network_devices?: number;
+  endpoint_users?: number;
+  servers?: number;
+  peripherals?: number;
 }
 
 const Dashboard: React.FC = () => {
@@ -40,11 +44,14 @@ const Dashboard: React.FC = () => {
     fetchStats();
   }, []);
 
+  const totalEndpoints = (stats.network_devices || 0) + (stats.endpoint_users || 0) + (stats.servers || 0) + (stats.peripherals || 0);
+
   const statsArray = [
     { label: 'Organizations', value: stats.organizations, icon: Building2, color: 'text-blue-500' },
     { label: 'Locations', value: stats.locations, icon: MapPin, color: 'text-green-500' },
     { label: 'Contacts', value: stats.contacts, icon: Users, color: 'text-purple-500' },
     { label: 'Documents', value: stats.documentations, icon: FileText, color: 'text-orange-500' },
+    { label: 'Endpoints', value: totalEndpoints, icon: Network, color: 'text-cyan-500' },
     { label: 'Passwords', value: stats.passwords, icon: Lock, color: 'text-red-500' },
     { label: 'Configurations', value: stats.configurations, icon: Wrench, color: 'text-yellow-500' },
   ];
