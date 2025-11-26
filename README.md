@@ -49,40 +49,6 @@ TechVault/
 - **Routing**: React Router v6.26+
 - **HTTP Client**: Axios with interceptors
 
-## ✨ Features
-
-### Phase 1: Foundation ✅
-- ✅ User authentication (email/password + GitHub OAuth)
-- ✅ JWT token management with auto-refresh
-- ✅ Protected routes and authorization
-- ✅ Premium dark/blue design language
-- ✅ Responsive sidebar navigation
-- ✅ Dashboard with user welcome
-- ✅ SQLite (dev) & PostgreSQL (prod) support
-- ✅ Full TypeScript support
-- ✅ CORS configuration
-
-### Phase 2: Core Features ✅ COMPLETE
-- ✅ **Organizations**: Full CRUD with statistics
-- ✅ **Locations**: Manage physical locations per organization
-- ✅ **Contacts**: Contact management with organization/location linking
-- ✅ **Documentation**: Create, edit, publish documentation with versioning
-- ✅ **Password Vault**: Secure password entry storage
-- ✅ **Configurations**: System configuration management
-- ✅ Search & filtering across all entities
-- ✅ Advanced API filtering (DjangoFilterBackend)
-- ✅ Custom user manager for email-based auth
-- ✅ Admin panel for all models
-
-### Planned Features
-- ⏳ File attachments for documents
-- ⏳ Team/group access control & permissions
-- ⏳ Password encryption
-- ⏳ Audit logging & activity trails
-- ⏳ Two-factor authentication
-- ⏳ Advanced search with full-text support
-- ⏳ API rate limiting
-
 ## 🔧 Quick Start
 
 ### Prerequisites
