@@ -34,6 +34,10 @@ export const userManagementService = {
    */
   async getAllUsers(): Promise<User[]> {
     const response = await api.get('/api/users/');
+    // Handle paginated response if present
+    if (response.data && typeof response.data === 'object' && 'results' in response.data) {
+      return response.data.results;
+    }
     return response.data;
   },
 

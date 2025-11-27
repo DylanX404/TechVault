@@ -33,11 +33,14 @@ const Settings: React.FC = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await userManagementService.getAllUsers();
       // Ensure data is always an array
       setUsers(Array.isArray(data) ? data : []);
     } catch (err: any) {
       console.error('Failed to load users:', err);
+      const errorMsg = err.response?.data?.detail || 'Failed to load users. Please check console for details.';
+      setError(errorMsg);
       // Reset to empty array on error
       setUsers([]);
     } finally {
@@ -228,6 +231,11 @@ const Settings: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
+            {error && !showUserModal && (
+              <div className="mb-4 bg-destructive/10 text-destructive text-sm p-3 rounded-md border border-destructive/20">
+                {error}
+              </div>
+            )}
             {loading && Array.isArray(users) && users.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 Loading users...
