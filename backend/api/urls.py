@@ -4,7 +4,7 @@ API URL Configuration for TechVault.
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
-from users.views import UserProfileView
+from users.views import UserProfileView, UserManagementViewSet
 from core.views import (
     OrganizationViewSet, LocationViewSet, ContactViewSet,
     DocumentationViewSet, PasswordEntryViewSet, ConfigurationViewSet,
@@ -25,6 +25,7 @@ router.register(r'network-devices', NetworkDeviceViewSet, basename='network-devi
 router.register(r'endpoint-users', EndpointUserViewSet, basename='endpoint-user')
 router.register(r'servers', ServerViewSet, basename='server')
 router.register(r'peripherals', PeripheralViewSet, basename='peripheral')
+router.register(r'users', UserManagementViewSet, basename='user')
 
 urlpatterns = [
     # Router URLs

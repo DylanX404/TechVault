@@ -4,7 +4,6 @@ import { OrganizationProvider } from '@/contexts/OrganizationContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardLayout from '@/components/DashboardLayout';
 import Login from '@/pages/Login';
-import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
 import { Organizations } from '@/pages/Organizations';
 import { OrganizationDetail } from '@/pages/OrganizationDetail';
@@ -39,7 +38,6 @@ function App() {
         <OrganizationProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
             <Route
               path="/"
               element={

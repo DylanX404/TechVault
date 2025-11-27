@@ -16,8 +16,32 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'full_name', 'is_active', 'date_joined']
-        read_only_fields = ['id', 'date_joined', 'is_active']
+        fields = ['id', 'email', 'first_name', 'last_name', 'full_name', 'is_active', 'is_staff', 'date_joined']
+        read_only_fields = ['id', 'date_joined']
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating new users by admins.
+    Requires email, password, first_name, and last_name.
+    """
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name', 'last_name', 'password', 'is_active', 'is_staff']
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        """
+        Create a new user with the provided data.
+        """
+        password = validated_data.pop('password')
+        user = User.objects.create_user(
+            password=password,
+            **validated_data
+        )
+        return user
 
 
 class LoginSerializer(BaseLoginSerializer):
