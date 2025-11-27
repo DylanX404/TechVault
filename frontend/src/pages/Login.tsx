@@ -97,21 +97,9 @@ const Login: React.FC = () => {
                   <span className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+             
                 </div>
               </div>
-
-              <Button
-                variant="outline"
-                className="w-full mt-4"
-                onClick={() => {
-                  // GitHub OAuth will be handled by backend
-                  window.location.href = 'http://localhost:8000/accounts/github/login/';
-                }}
-              >
-                <Github className="mr-2 h-4 w-4" />
-                GitHub
-              </Button>
             </div>
           </CardContent>
         </Card>
