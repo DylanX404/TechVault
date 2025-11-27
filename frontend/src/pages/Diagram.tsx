@@ -114,7 +114,7 @@ export function Diagram() {
       {/* Screen header */}
       <div className="flex justify-between items-start print:hidden">
         <div>
-          <h1 className="text-3xl font-bold">Network Diagram</h1>
+          <h1 className="text-3xl font-bold">Infrastructure Diagram</h1>
           <p className="text-muted-foreground mt-1">
             Visual representation of your IT infrastructure
           </p>
