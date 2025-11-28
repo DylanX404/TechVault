@@ -209,8 +209,9 @@ log_info "Setting up frontend..."
 cd "$INSTALL_DIR/frontend"
 
 # Create frontend .env file
-# Use empty VITE_API_URL so frontend uses relative URLs (same origin)
-# This allows the app to work with any domain/IP without rebuilding
+# Set VITE_API_URL to empty string so the frontend uses window.location.origin
+# This makes the frontend automatically use the same domain/IP it's accessed from
+# allowing the app to work with any domain/IP without rebuilding
 cat > "$INSTALL_DIR/frontend/.env" <<EOF
 VITE_API_URL=
 EOF
