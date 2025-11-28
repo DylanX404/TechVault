@@ -1,7 +1,11 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { AuthTokens } from '@/types/auth';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Use VITE_API_URL if explicitly set, otherwise use current origin (for production deployments)
+// This allows the app to work with any domain/IP without rebuilding
+const API_URL = import.meta.env.VITE_API_URL !== undefined && import.meta.env.VITE_API_URL !== ''
+  ? import.meta.env.VITE_API_URL
+  : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 
 // Create axios instance
 const api = axios.create({
