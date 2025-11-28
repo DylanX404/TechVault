@@ -203,11 +203,11 @@ class ContactViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
 
         writer = csv.writer(response)
         # Write header
-        writer.writerow(['first_name', 'last_name', 'title', 'email', 'phone', 'mobile', 'notes', 'location_name', 'is_active'])
+        writer.writerow(['first_name', 'last_name', 'title', 'email', 'phone'])
         # Write example rows
-        writer.writerow(['John', 'Doe', 'IT Manager', 'john.doe@example.com', '+1-555-0100', '+1-555-0101', 'Primary IT contact', 'Main Office', 'true'])
-        writer.writerow(['Jane', 'Smith', 'HR Director', 'jane.smith@example.com', '+1-555-0200', '+1-555-0201', 'Human resources contact', 'Branch Office', 'true'])
-        writer.writerow(['Bob', 'Johnson', 'CEO', 'bob.johnson@example.com', '+1-555-0300', '', 'Chief Executive Officer', '', 'true'])
+        writer.writerow(['John', 'Doe', 'IT Manager', 'john.doe@example.com', '+1-555-0100'])
+        writer.writerow(['Jane', 'Smith', 'HR Director', 'jane.smith@example.com', '+1-555-0200'])
+        writer.writerow(['Bob', 'Johnson', 'CEO', 'bob.johnson@example.com', '+1-555-0300'])
 
         return response
 
@@ -257,32 +257,15 @@ class ContactViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
 
             for row_num, row in enumerate(reader, start=2):  # start=2 because row 1 is header
                 try:
-                    # Get or create location if location_name is provided
-                    location = None
-                    location_name = row.get('location_name', '').strip()
-                    if location_name:
-                        location, _ = Location.objects.get_or_create(
-                            name=location_name,
-                            organization=organization,
-                            defaults={'created_by': request.user}
-                        )
-
-                    # Parse is_active field
-                    is_active_str = row.get('is_active', 'true').strip().lower()
-                    is_active = is_active_str in ['true', '1', 'yes', 'y']
-
-                    # Create contact
+                    # Create contact (is_active always set to True)
                     Contact.objects.create(
                         organization=organization,
-                        location=location,
                         first_name=row.get('first_name', '').strip(),
                         last_name=row.get('last_name', '').strip(),
                         title=row.get('title', '').strip(),
                         email=row.get('email', '').strip(),
                         phone=row.get('phone', '').strip(),
-                        mobile=row.get('mobile', '').strip(),
-                        notes=row.get('notes', '').strip(),
-                        is_active=is_active,
+                        is_active=True,
                         created_by=request.user
                     )
                     created_count += 1
