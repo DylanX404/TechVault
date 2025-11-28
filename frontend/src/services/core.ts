@@ -86,6 +86,25 @@ export const contactAPI = {
     api.post(`/api/contacts/${id}/restore/`, {}),
   hardDelete: (id: string) =>
     api.delete(`/api/contacts/${id}/hard_delete/`),
+  downloadExampleCSV: () => {
+    return api.get('/api/contacts/download_example_csv/', {
+      responseType: 'blob'
+    });
+  },
+  importCSV: (file: File, organizationId: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('organization_id', organizationId);
+    return api.post<{
+      created: number;
+      errors: Array<{ row: number; error: string }>;
+      message: string;
+    }>('/api/contacts/import_csv/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
 
 // Documentation APIs

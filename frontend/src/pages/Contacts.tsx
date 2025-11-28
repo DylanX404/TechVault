@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -7,7 +7,7 @@ import { EmptyOrgState } from '../components/EmptyOrgState';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { contactAPI } from '../services/core';
 import { Contact } from '../types/core';
-import { Users, Trash2, Edit, ChevronRight } from 'lucide-react';
+import { Users, Trash2, Edit, ChevronRight, Upload, Download } from 'lucide-react';
 
 export const Contacts: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +15,13 @@ export const Contacts: React.FC = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    created: number;
+    errors: Array<{ row: number; error: string }>;
+    message: string;
+  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (selectedOrg) {
@@ -54,6 +61,56 @@ export const Contacts: React.FC = () => {
     }
   };
 
+  const handleDownloadExample = async () => {
+    try {
+      const response = await contactAPI.downloadExampleCSV();
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'contacts_example.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Failed to download example CSV');
+    }
+  };
+
+  const handleImportClick = () => {
+    if (!selectedOrg) {
+      setError('Please select an organization first');
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedOrg) return;
+
+    try {
+      setImporting(true);
+      setError(null);
+      setImportResult(null);
+
+      const response = await contactAPI.importCSV(file, selectedOrg.id.toString());
+      setImportResult(response.data);
+
+      // Refresh the contacts list
+      await fetchContacts();
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to import CSV');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <ListHeader
@@ -67,6 +124,51 @@ export const Contacts: React.FC = () => {
         <EmptyOrgState />
       ) : (
         <>
+          {/* CSV Import/Export Section */}
+          <Card className="p-4">
+            <div className="flex items-center gap-4">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <Button
+                onClick={handleImportClick}
+                disabled={importing || !selectedOrg}
+                className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                {importing ? 'Importing...' : 'Import CSV'}
+              </Button>
+              <Button
+                onClick={handleDownloadExample}
+                className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download Example CSV
+              </Button>
+            </div>
+          </Card>
+
+          {/* Import Result */}
+          {importResult && (
+            <Card className={`p-4 ${importResult.errors.length > 0 ? 'bg-yellow-900/20 border-yellow-700' : 'bg-green-900/20 border-green-700'}`}>
+              <h3 className="font-semibold mb-2">{importResult.message}</h3>
+              {importResult.errors.length > 0 && (
+                <div className="mt-2">
+                  <p className="font-semibold text-sm mb-1">Errors:</p>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    {importResult.errors.map((err, idx) => (
+                      <li key={idx}>Row {err.row}: {err.error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </Card>
+          )}
+
           {error && <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-200">{error}</div>}
 
           {loading ? (
