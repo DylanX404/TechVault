@@ -163,7 +163,37 @@ npm run test  # To be configured
 
 ## 🚀 Updating TechVault
 
-After installation, update to the latest version with:
+**One-command deployment for Ubuntu 24.04 servers:**
+
+```bash
+wget https://raw.githubusercontent.com/Jurgens92/TechVault/main/install.sh
+sudo bash install.sh
+```
+
+**For public IP/domain access**, set the PUBLIC_DOMAIN variable:
+
+```bash
+PUBLIC_DOMAIN=your.domain.com sudo -E bash install.sh
+```
+
+This fully automated script will:
+- Install all dependencies (Python, Node.js, PostgreSQL, Nginx)
+- Set up and configure the database
+- Build and deploy both frontend and backend
+- Configure Nginx to serve on port 80
+- Create systemd services for auto-start
+- Generate secure credentials
+- Work with any IP/domain (uses relative URLs)
+
+Default admin credentials:
+- Email: `admin@techvault.local`
+- Password: `TechVault2024!`
+
+For detailed instructions, see [INSTALLATION.md](./INSTALLATION.md)
+
+### Updating TechVault
+
+**One-command update:**
 
 ```bash
 cd /opt/techvault
