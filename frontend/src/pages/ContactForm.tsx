@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { contactAPI } from '../services/core';
-import { Contact } from '../types/core';
+import { contactAPI, locationAPI } from '../services/core';
+import { Contact, Location } from '../types/core';
 import { ArrowLeft } from 'lucide-react';
 import { useOrganization } from '../contexts/OrganizationContext';
 
@@ -17,6 +17,7 @@ export const ContactForm: React.FC = () => {
   const [loading, setLoading] = useState(isEditMode);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [formData, setFormData] = useState<Partial<Contact>>({
     first_name: '',
     last_name: '',
@@ -24,9 +25,16 @@ export const ContactForm: React.FC = () => {
     email: '',
     phone: '',
     mobile: '',
+    location: '',
     notes: '',
     is_active: true,
   });
+
+  useEffect(() => {
+    if (selectedOrg) {
+      loadLocations();
+    }
+  }, [selectedOrg]);
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -40,6 +48,25 @@ export const ContactForm: React.FC = () => {
     }
   }, [id, isEditMode, selectedOrg]);
 
+  const loadLocations = async () => {
+    if (!selectedOrg) return;
+    try {
+      const response = await locationAPI.byOrganization(selectedOrg.id);
+      // Sort by creation date (oldest first)
+      const sortedLocations = response.data.sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      setLocations(sortedLocations);
+
+      // If creating a new contact (not editing), pre-select the first location
+      if (!id && sortedLocations.length > 0) {
+        setFormData((prev) => ({ ...prev, location: sortedLocations[0].id }));
+      }
+    } catch (error) {
+      console.error('Failed to load locations:', error);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
@@ -52,11 +79,17 @@ export const ContactForm: React.FC = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Convert empty location to null
+      const submitData = {
+        ...formData,
+        location: formData.location || null,
+      };
+
       if (isEditMode && id) {
-        await contactAPI.update(id, formData);
+        await contactAPI.update(id, submitData);
         navigate(`/contacts/${id}`);
       } else {
-        const response = await contactAPI.create(formData);
+        const response = await contactAPI.create(submitData);
         navigate(`/contacts/${response.data.id}`);
       }
     } catch (err: any) {
@@ -90,9 +123,27 @@ export const ContactForm: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
-            <Input type="text" name="title" value={formData.title || ''} onChange={handleChange} className="bg-gray-700 border-gray-600 text-white" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+              <Input type="text" name="title" value={formData.title || ''} onChange={handleChange} className="bg-gray-700 border-gray-600 text-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Location / Site</label>
+              <select
+                name="location"
+                value={formData.location || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">No location assigned</option>
+                {locations.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

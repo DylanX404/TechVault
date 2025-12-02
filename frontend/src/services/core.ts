@@ -333,8 +333,10 @@ export const voipAPI = {
 
 // Diagram APIs
 export const diagramAPI = {
-  getData: (organizationId?: string) => {
-    const params = organizationId ? { organization_id: organizationId } : undefined;
-    return api.get<DiagramData>('/api/diagram/data/', { params });
+  getData: (organizationId?: string, locationId?: string) => {
+    const params: Record<string, string> = {};
+    if (organizationId) params.organization_id = organizationId;
+    if (locationId) params.location_id = locationId;
+    return api.get<DiagramData>('/api/diagram/data/', { params: Object.keys(params).length > 0 ? params : undefined });
   },
 };

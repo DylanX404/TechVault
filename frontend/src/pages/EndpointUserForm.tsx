@@ -51,8 +51,17 @@ export function EndpointUserForm() {
         locationAPI.byOrganization(selectedOrg.id),
         contactAPI.byOrganization(selectedOrg.id),
       ]);
-      setLocations(locationsRes.data);
+      // Sort locations by creation date (oldest first)
+      const sortedLocations = locationsRes.data.sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      setLocations(sortedLocations);
       setContacts(contactsRes.data);
+
+      // If creating a new endpoint (not editing), pre-select the first location
+      if (!id && sortedLocations.length > 0) {
+        setFormData((prev) => ({ ...prev, location: sortedLocations[0].id }));
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
     }
@@ -90,6 +99,26 @@ export function EndpointUserForm() {
       console.error('Failed to load endpoint:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleContactChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const contactId = e.target.value;
+
+    // Find the selected contact
+    const selectedContact = contacts.find(c => c.id === contactId);
+
+    // Auto-sync location from contact, but allow manual override
+    // Only update location if a contact is selected and they have a location
+    if (selectedContact && selectedContact.location) {
+      setFormData({
+        ...formData,
+        assigned_to: contactId,
+        location: selectedContact.location
+      });
+    } else {
+      // Just update assigned_to, keep current location
+      setFormData({ ...formData, assigned_to: contactId });
     }
   };
 
@@ -182,10 +211,13 @@ export function EndpointUserForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Assigned To</label>
+            <label className="block text-sm font-medium mb-2">
+              Assigned To
+              <span className="text-xs text-muted-foreground ml-2">(auto-syncs location)</span>
+            </label>
             <select
               value={formData.assigned_to}
-              onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+              onChange={handleContactChange}
               className="w-full px-3 py-2 border border-input rounded-md bg-background"
             >
               <option value="">Select user (optional)</option>
@@ -358,7 +390,10 @@ export function EndpointUserForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Location</label>
+            <label className="block text-sm font-medium mb-2">
+              Location
+              <span className="text-xs text-muted-foreground ml-2">(can override)</span>
+            </label>
             <select
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}

@@ -40,7 +40,16 @@ export function NetworkDeviceForm() {
     if (!selectedOrg) return;
     try {
       const response = await locationAPI.byOrganization(selectedOrg.id);
-      setLocations(response.data);
+      // Sort by creation date (oldest first)
+      const sortedLocations = response.data.sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      setLocations(sortedLocations);
+
+      // If creating a new device (not editing), pre-select the first location
+      if (!id && sortedLocations.length > 0) {
+        setFormData((prev) => ({ ...prev, location: sortedLocations[0].id }));
+      }
     } catch (error) {
       console.error('Failed to load locations:', error);
     }
