@@ -187,7 +187,7 @@ export const Contacts: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-white group-hover:text-blue-400">{contact.full_name}</h3>
                   {contact.title && <p className="text-gray-400 text-sm">{contact.title}</p>}
-                  <p className="text-gray-400 text-sm">{contact.organization_name}</p>
+                  {contact.location_name && <p className="text-gray-400 text-sm">📍 {contact.location_name}</p>}
                   <div className="flex gap-4 mt-2 text-sm text-gray-400">
                     <a href={`mailto:${contact.email}`} className="hover:text-blue-400">{contact.email}</a>
                     {contact.phone && <span>{contact.phone}</span>}
