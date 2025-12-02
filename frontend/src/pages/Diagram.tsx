@@ -1,21 +1,30 @@
 import { useEffect, useState, useRef } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import { diagramAPI } from '@/services/core';
-import type { DiagramData } from '@/types/core';
-import { Loader2, Network, Monitor, HardDrive, Printer, Globe, Shield, Wifi, Cpu, MemoryStick, Database, FileDown, ChevronDown, Package, User, Phone } from 'lucide-react';
+import { diagramAPI, locationAPI } from '@/services/core';
+import type { DiagramData, Location } from '@/types/core';
+import { Loader2, Network, Monitor, HardDrive, Printer, Globe, Shield, Wifi, Cpu, MemoryStick, Database, FileDown, ChevronDown, Package, User, Phone, MapPin } from 'lucide-react';
 import { exportAsPNG, exportAsJSON, exportAsSVG, exportAsPDF, printDiagram } from '@/utils/diagramExport';
 
 export function Diagram() {
   const { selectedOrg } = useOrganization();
   const [data, setData] = useState<DiagramData | null>(null);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null); // null = "All Sites"
   const [loading, setLoading] = useState(true);
+  const [locationsLoading, setLocationsLoading] = useState(true);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const diagramRef = useRef<HTMLDivElement>(null);
 
+  // Load locations when organization changes
+  useEffect(() => {
+    loadLocations();
+  }, [selectedOrg]);
+
+  // Load diagram data when organization or location changes
   useEffect(() => {
     loadDiagramData();
-  }, [selectedOrg]);
+  }, [selectedOrg, selectedLocation]);
 
   useEffect(() => {
     // Close export menu when clicking outside
@@ -32,12 +41,41 @@ export function Diagram() {
     };
   }, [exportMenuOpen]);
 
+  const loadLocations = async () => {
+    if (!selectedOrg) {
+      setLocations([]);
+      setSelectedLocation(null);
+      setLocationsLoading(false);
+      return;
+    }
+
+    try {
+      setLocationsLoading(true);
+      const response = await locationAPI.byOrganization(selectedOrg.id);
+      // Sort by creation date (oldest first)
+      const sortedLocations = response.data.sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      setLocations(sortedLocations);
+      // Reset to "All Sites" when organization changes
+      setSelectedLocation(null);
+    } catch (error) {
+      console.error('Failed to load locations:', error);
+      setLocations([]);
+    } finally {
+      setLocationsLoading(false);
+    }
+  };
+
   const loadDiagramData = async () => {
     if (!selectedOrg) return;
 
     try {
       setLoading(true);
-      const response = await diagramAPI.getData(selectedOrg.id);
+      const response = await diagramAPI.getData(
+        selectedOrg.id,
+        selectedLocation || undefined
+      );
       setData(response.data);
     } catch (error) {
       console.error('Failed to load diagram data:', error);
@@ -73,7 +111,18 @@ export function Diagram() {
     setExportMenuOpen(false);
 
     try {
-      const filename = `${selectedOrg.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_diagram`;
+      // Build filename with organization and location name
+      const locationName = selectedLocation
+        ? locations.find(loc => loc.id === selectedLocation)?.name
+        : 'all_sites';
+      const sanitizedOrgName = selectedOrg.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const sanitizedLocationName = locationName?.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const filename = `${sanitizedOrgName}_${sanitizedLocationName}_diagram`;
+
+      // Build display name for PDF/exports
+      const displayName = selectedLocation
+        ? `${selectedOrg.name} - ${locationName}`
+        : selectedOrg.name;
 
       switch (format) {
         case 'png':
@@ -82,13 +131,13 @@ export function Diagram() {
           }
           break;
         case 'json':
-          exportAsJSON(data, selectedOrg.name);
+          exportAsJSON(data, displayName);
           break;
         case 'svg':
-          exportAsSVG(data, selectedOrg.name);
+          exportAsSVG(data, displayName);
           break;
         case 'pdf':
-          await exportAsPDF(data, selectedOrg.name);
+          await exportAsPDF(data, displayName);
           break;
         case 'print':
           printDiagram();
@@ -103,12 +152,17 @@ export function Diagram() {
   };
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-6">
       {/* Organization name - only visible in print */}
       <div className="hidden print:block">
         <p className="text-sm text-muted-foreground mb-1">Organization:</p>
         <h1 className="text-3xl font-bold mb-2">{selectedOrg.name}</h1>
         <h2 className="text-xl font-semibold">IT Infrastructure Diagram</h2>
+        {selectedLocation && (
+          <p className="text-lg text-muted-foreground">
+            Location: {locations.find(loc => loc.id === selectedLocation)?.name}
+          </p>
+        )}
       </div>
 
       {/* Screen header */}
@@ -173,6 +227,46 @@ export function Diagram() {
           )}
         </div>
       </div>
+
+      {/* Location Tabs - only show if there are locations */}
+      {locationsLoading ? (
+        <div className="flex justify-center py-4 print:hidden">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : locations.length > 0 && (
+        <div className="border-b border-border print:hidden">
+          <div className="flex gap-1 overflow-x-auto">
+            {/* All Sites Tab */}
+            <button
+              onClick={() => setSelectedLocation(null)}
+              className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${
+                selectedLocation === null
+                  ? 'border-primary text-primary font-medium'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+            >
+              <Globe className="h-4 w-4" />
+              All Sites
+            </button>
+
+            {/* Individual Location Tabs */}
+            {locations.map((location) => (
+              <button
+                key={location.id}
+                onClick={() => setSelectedLocation(location.id)}
+                className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${
+                  selectedLocation === location.id
+                    ? 'border-primary text-primary font-medium'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                }`}
+              >
+                <MapPin className="h-4 w-4" />
+                {location.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {data && (
         <div id="diagram-content" ref={diagramRef} className="space-y-8">

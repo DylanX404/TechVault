@@ -41,7 +41,16 @@ export function BackupForm() {
     if (!selectedOrg) return;
     try {
       const locationsRes = await locationAPI.byOrganization(selectedOrg.id);
-      setLocations(locationsRes.data);
+      // Sort locations by creation date (oldest first)
+      const sortedLocations = locationsRes.data.sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      setLocations(sortedLocations);
+
+      // If creating a new backup (not editing), pre-select the first location
+      if (!id && sortedLocations.length > 0) {
+        setFormData((prev) => ({ ...prev, location: sortedLocations[0].id }));
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
     }

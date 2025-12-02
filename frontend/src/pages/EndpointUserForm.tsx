@@ -51,8 +51,17 @@ export function EndpointUserForm() {
         locationAPI.byOrganization(selectedOrg.id),
         contactAPI.byOrganization(selectedOrg.id),
       ]);
-      setLocations(locationsRes.data);
+      // Sort locations by creation date (oldest first)
+      const sortedLocations = locationsRes.data.sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      setLocations(sortedLocations);
       setContacts(contactsRes.data);
+
+      // If creating a new endpoint (not editing), pre-select the first location
+      if (!id && sortedLocations.length > 0) {
+        setFormData((prev) => ({ ...prev, location: sortedLocations[0].id }));
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
     }

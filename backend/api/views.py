@@ -48,26 +48,80 @@ def dashboard_stats(request):
 def diagram_data(request):
     """
     Get all endpoint data for diagram generation.
-    """
-    org_id = request.query_params.get('organization_id')
+    Supports filtering by organization and location.
 
-    # Filter by organization if provided
+    Query parameters:
+    - organization_id: Filter by organization
+    - location_id: Filter by location (includes unassigned items with location=null)
+    """
+    from django.db.models import Q
+
+    org_id = request.query_params.get('organization_id')
+    location_id = request.query_params.get('location_id')
+
+    # Base filters
+    base_filter = {'is_active': True}
     if org_id:
-        network_devices = NetworkDevice.objects.filter(organization_id=org_id, is_active=True)
-        endpoint_users = EndpointUser.objects.filter(organization_id=org_id, is_active=True)
-        servers = Server.objects.filter(organization_id=org_id, is_active=True)
-        peripherals = Peripheral.objects.filter(organization_id=org_id, is_active=True)
-        backups = Backup.objects.filter(organization_id=org_id, is_active=True)
-        software = Software.objects.filter(organization_id=org_id, is_active=True)
-        voip = VoIP.objects.filter(organization_id=org_id, is_active=True)
+        base_filter['organization_id'] = org_id
+
+    # Filter physical devices (include unassigned items if location_id is specified)
+    if location_id:
+        # Include items with the specified location OR unassigned items (location=null)
+        location_filter = Q(location_id=location_id) | Q(location__isnull=True)
+        network_devices = NetworkDevice.objects.filter(**base_filter).filter(location_filter)
+        endpoint_users = EndpointUser.objects.filter(**base_filter).filter(location_filter)
+        servers = Server.objects.filter(**base_filter).filter(location_filter)
+        peripherals = Peripheral.objects.filter(**base_filter).filter(location_filter)
+        backups = Backup.objects.filter(**base_filter).filter(location_filter)
     else:
-        network_devices = NetworkDevice.objects.filter(is_active=True)
-        endpoint_users = EndpointUser.objects.filter(is_active=True)
-        servers = Server.objects.filter(is_active=True)
-        peripherals = Peripheral.objects.filter(is_active=True)
-        backups = Backup.objects.filter(is_active=True)
-        software = Software.objects.filter(is_active=True)
-        voip = VoIP.objects.filter(is_active=True)
+        # No location filter - show all
+        network_devices = NetworkDevice.objects.filter(**base_filter)
+        endpoint_users = EndpointUser.objects.filter(**base_filter)
+        servers = Server.objects.filter(**base_filter)
+        peripherals = Peripheral.objects.filter(**base_filter)
+        backups = Backup.objects.filter(**base_filter)
+
+    # Filter Software and VoIP based on assigned contacts' locations
+    if location_id:
+        # Software: include if any assigned contact has this location or no location
+        software_ids = set()
+        all_software = Software.objects.filter(**base_filter)
+        for sw in all_software:
+            # Get all assigned contacts for this software
+            assigned_contacts = sw.software_assignments.select_related('contact').all()
+            if not assigned_contacts.exists():
+                # No assignments - show in all location views
+                software_ids.add(sw.id)
+            else:
+                # Check if any contact has this location or no location
+                for assignment in assigned_contacts:
+                    if assignment.contact.location_id == location_id or assignment.contact.location_id is None:
+                        software_ids.add(sw.id)
+                        break
+
+        software = Software.objects.filter(id__in=software_ids, **base_filter)
+
+        # VoIP: include if any assigned contact has this location or no location
+        voip_ids = set()
+        all_voip = VoIP.objects.filter(**base_filter)
+        for vp in all_voip:
+            # Get all assigned contacts for this voip
+            assigned_contacts = vp.voip_assignments.select_related('contact').all()
+            if not assigned_contacts.exists():
+                # No assignments - show in all location views
+                voip_ids.add(vp.id)
+            else:
+                # Check if any contact has this location or no location
+                for assignment in assigned_contacts:
+                    if assignment.contact.location_id == location_id or assignment.contact.location_id is None:
+                        voip_ids.add(vp.id)
+                        break
+
+        voip = VoIP.objects.filter(id__in=voip_ids, **base_filter)
+    else:
+        # No location filter - show all
+        software = Software.objects.filter(**base_filter)
+        voip = VoIP.objects.filter(**base_filter)
 
     return Response({
         'network_devices': NetworkDeviceSerializer(network_devices, many=True).data,
