@@ -80,19 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             </div>
           )}
         </div>
-        <button
-          onClick={onToggle}
-          className={cn(
-            'p-1 hover:bg-accent rounded-md transition-colors',
-            collapsed && 'absolute right-2'
-          )}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
-        </button>
+
       </div>
 
       {/* Organization Selector */}
