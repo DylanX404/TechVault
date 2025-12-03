@@ -602,3 +602,80 @@ class VoIPAssignment(BaseModel):
 
     def __str__(self):
         return f"{self.voip.name} -> {self.contact.full_name}"
+
+class RMMEndpoint(BaseModel):
+    """Endpoint data synced from Tactical RMM"""
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='rmm_endpoints')
+    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True, related_name='rmm_endpoints')
+    
+    # RMM identifiers
+    agent_id = models.CharField(max_length=255, unique=True, db_index=True)
+    
+    # Basic info
+    name = models.CharField(max_length=255, help_text='Device hostname')
+    device_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('desktop', 'Desktop'),
+            ('laptop', 'Laptop'),
+            ('server', 'Server'),
+            ('workstation', 'Workstation'),
+            ('other', 'Other'),
+        ],
+        default='other'
+    )
+    
+    # Hardware
+    cpu_model = models.CharField(max_length=255, blank=True)
+    cpu_cores = models.IntegerField(default=0)
+    ram_gb = models.FloatField(default=0, help_text='RAM in GB')
+    
+    # Storage
+    disk_total_gb = models.FloatField(default=0)
+    disk_free_gb = models.FloatField(default=0)
+    
+    # OS
+    operating_system = models.CharField(max_length=255, blank=True)
+    
+    # User & Status
+    logged_in_user = models.CharField(max_length=255, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('online', 'Online'),
+            ('offline', 'Offline'),
+            ('unknown', 'Unknown'),
+        ],
+        default='unknown'
+    )
+    
+    # Identification
+    serial_number = models.CharField(max_length=255, blank=True)
+    
+    # Sync tracking
+    last_seen = models.DateTimeField(null=True, blank=True, help_text='Last time seen in RMM')
+    last_sync = models.DateTimeField(auto_now=True)
+    
+    # Raw RMM data
+    raw_rmm_data = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        ordering = ['-last_sync']
+        db_table = 'rmm_endpoints'
+        indexes = [
+            models.Index(fields=['organization', '-last_sync']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} ({self.status})"
+    
+    @property
+    def disk_used_gb(self):
+        return self.disk_total_gb - self.disk_free_gb
+    
+    @property
+    def disk_usage_percent(self):
+        if self.disk_total_gb > 0:
+            return round((self.disk_used_gb / self.disk_total_gb) * 100, 2)
+        return 0

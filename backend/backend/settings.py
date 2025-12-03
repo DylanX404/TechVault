@@ -2,6 +2,11 @@
 Django settings for TechVault project.
 """
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+import os
 from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
